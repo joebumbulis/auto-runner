@@ -1,0 +1,50 @@
+---
+- name: Create temporary CircleCI Directory
+  tempfile:
+    state: directory
+    suffix: "_circleci"
+    path: "{{ TEMPDIR }}"
+  register: circleci_temp_dir
+
+- name: Format Architecture Name - x86_64 to amd64
+  set_fact:
+    arch: "amd64"
+  when:  ansible_architecture == 'x86_64'
+
+- name: Format Architecture Name - aarch64 to arm64
+  set_fact:
+    arch: "arm64"
+  when:  ansible_architecture == 'aarch64'
+
+- name: Format Architecture Name - Other Architectures
+  set_fact:
+    arch: "{{ ansible_architecture }}"
+  when: ansible_architecture != 'x86_64' and ansible_architecture != 'aarch64'
+
+- name: Download CircleCI CLI and Verify Checksum
+  get_url:
+    url: "{{ GITHUB_BASE_URL }}/releases/download/v{{ VERSION }}/circleci-cli_{{ VERSION }}_{{ ansible_system | lower }}_{{ arch }}.tar.gz"
+    dest: "{{ circleci_temp_dir.path }}"
+    checksum: "sha256:{{ GITHUB_BASE_URL }}/releases/download/v{{ VERSION }}/circleci-cli_{{ VERSION }}_checksums.txt"
+  register: download_info
+
+- name: Extract CircleCI CLI to {{ DESTDIR }}
+  unarchive:
+    src: "{{ download_info.dest }}"
+    dest: "{{ DESTDIR }}"
+    remote_src: true
+    extra_opts: [--strip-components=1]
+    exclude:
+      - api
+      - md_docs
+
+- name: Delete temporary CircleCI Directory
+  file:
+    path: "{{ circleci_temp_dir.path }}"
+    state: absent
+  when: circleci_temp_dir.path is defined
+
+- name: Check CircleCI CLI Install
+  shell: circleci version
+  register: cli
+  failed_when: cli.rc != 0

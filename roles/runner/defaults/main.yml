@@ -1,0 +1,4 @@
+---
+BASE_URL: "https://circleci-binary-releases.s3.amazonaws.com/circleci-launch-agent"
+SERVER_INSTALL: False
+RUNNER_DIR: "/opt/circleci"

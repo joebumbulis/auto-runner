@@ -1,0 +1,5 @@
+---
+GITHUB_BASE_URL: "https://github.com/CircleCI-Public/circleci-cli"
+LATEST_URL: "{{ GITHUB_BASE_URL }}/releases/latest/"
+DESTDIR: "/usr/local/bin/"
+TEMPDIR: "/tmp"

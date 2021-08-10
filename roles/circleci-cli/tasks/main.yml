@@ -1,0 +1,30 @@
+---
+- name: Install GitHub Python Package
+  pip:
+    name: github3.py >= 1.0.0a3
+    state: present
+
+- name: Grab latest CircleCI CLI Version
+  github_release:
+    user: CircleCI-Public
+    repo: circleci-cli
+    action: latest_release
+  register: github_response
+
+- set_fact:
+    latest_version: "{{ github_response.tag[1:] }}"
+
+- name: Check if Version is Set
+  set_fact:
+    VERSION: "{{ latest_version }}"
+  when: VERSION == None  
+
+
+- include_tasks: linux-setup.yml
+  when: ansible_system == "Linux"
+
+- include_tasks: windows-setup.yml
+  when: ansible_system == "Windows"
+
+- include_tasks: darwin-setup.yml
+  when: ansible_system == "Darwin" 
