@@ -1,1 +1,67 @@
 ---
+- name: Create temporary CircleCI Directory
+  tempfile:
+    state: directory
+    suffix: "_circleci"
+    path: "{{ TEMPDIR }}"
+  register: circleci_temp_dir
+
+- name: Format Architecture Name - x86_64 to amd64
+  set_fact:
+    arch: "amd64"
+  when:  ansible_architecture == 'x86_64'
+
+- name: Format Architecture Name - aarch64 to arm64
+  set_fact:
+    arch: "arm64"
+  when:  ansible_architecture == 'aarch64'
+
+- name: Format Architecture Name - Other Architectures
+  set_fact:
+    arch: "{{ ansible_architecture }}"
+  when: ansible_architecture != 'x86_64' and ansible_architecture != 'aarch64'
+
+- name: Download Checksum File
+  get_url:
+    url: "{{ BASE_URL }}/{{ RUNNER_VERSION }}/checksums.txt"
+    dest: "{{ circleci_temp_dir.path }}"
+
+- name: Get checksum and file name
+  command: "grep -F '{{ ansible_system | lower }}/{{ arch }}' {{ circleci_temp_dir.path }}/checksums.txt"
+  register: checksum_and_filename
+
+- set_fact:
+    checksum: "{{ checksum_and_filename.stdout.split(' ')[0] }}"
+
+- name: curl runner binary
+  command: "curl --compressed -L '{{ BASE_URL }}/{{ RUNNER_VERSION }}/{{ ansible_system | lower }}/{{ arch }}/circleci-launch-agent' -o '{{ circleci_temp_dir.path  }}/circleci-launch-agent'"
+
+- name: Get binary status
+  stat:
+    path: "{{ circleci_temp_dir.path  }}/circleci-launch-agent"
+    checksum_algorithm: sha256
+  register: runner_stat
+
+- name: Remove runner binary if checksums do not match
+  file:
+    path:  "{{ circleci_temp_dir.path  }}/circleci-launch-agent"
+    state: absent
+  when: runner_stat.stat.checksum != checksum
+
+- fail:
+    msg: "Runner checksum failed"
+  when: runner_stat.stat.checksum != checksum
+
+- name: Create CircleCI User - {{ CIRCLECI_USER }}
+  user:
+    name: "{{ CIRCLECI_USER }}"
+    home: /opt/{{ circleci_user }}/workdir
+    comment: "GECOS circleci"
+    uid: 1500
+
+- name: Create working directory
+  file:
+    path: "{{ RUNNER_DIR }}/workdir"
+    state: directory
+    owner: "{{ circleci_user }}"
+    group: "{{ circleci_user }}"

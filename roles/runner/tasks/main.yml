@@ -1,14 +1,19 @@
 ---
 - name: Check that a page returns a status 200 and fail if the word AWESOME is not in the page contents
   uri:
-    url: https://circleci-binary-releases.s3.amazonaws.com/circleci-launch-agent/release.txt
+    url: "{{ BASE_URL }}/release.txt"
     return_content: yes
   register: release_info
 
-- name: Setting Launch Agent Version
+- name: Setting Runner Version for Non-Server Install
   set_fact:
-    launch_agent_version: "{{ release_info.content[:-1] }}"
+    RUNNER_VERSION: "{{ release_info.content[:-1] }}"
   when: RUNNER_VERSION == None and SERVER_INSTALL == False
+
+- name: Check if Server Install is Enable and Version is Set
+  fail:
+    msg: "You are trying to install Runner on Server with out having RUNNER_VERSION set. Please refer to https://circleci.com/docs/2.0/runner-installation/#runner-for-server-compatibility"
+  when: RUNNER_VERSION == None and SERVER_INSTALL == True
 
 - include_tasks: linux-setup.yml
   when: ansible_system == "Linux"
