@@ -19,6 +19,20 @@
     VERSION: "{{ latest_version }}"
   when: VERSION == None  
 
+- name: Format Architecture Name - x86_64 to amd64
+  set_fact:
+    arch: "amd64"
+  when:  ansible_architecture == 'x86_64'
+
+- name: Format Architecture Name - aarch64 to arm64
+  set_fact:
+    arch: "arm64"
+  when:  ansible_architecture == 'aarch64'
+
+- name: Format Architecture Name - Other Architectures
+  set_fact:
+    arch: "{{ ansible_architecture }}"
+  when: ansible_architecture != 'x86_64' and ansible_architecture != 'aarch64'
 
 - include_tasks: linux-setup.yml
   when: ansible_system == "Linux"

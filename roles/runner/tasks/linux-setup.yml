@@ -6,21 +6,6 @@
     path: "{{ TEMPDIR }}"
   register: circleci_temp_dir
 
-- name: Format Architecture Name - x86_64 to amd64
-  set_fact:
-    arch: "amd64"
-  when:  ansible_architecture == 'x86_64'
-
-- name: Format Architecture Name - aarch64 to arm64
-  set_fact:
-    arch: "arm64"
-  when:  ansible_architecture == 'aarch64'
-
-- name: Format Architecture Name - Other Architectures
-  set_fact:
-    arch: "{{ ansible_architecture }}"
-  when: ansible_architecture != 'x86_64' and ansible_architecture != 'aarch64'
-
 - name: Download Checksum File
   get_url:
     url: "{{ BASE_URL }}/{{ RUNNER_VERSION }}/checksums.txt"
@@ -36,7 +21,7 @@
 - name: curl runner binary
   command: "curl --compressed -L '{{ BASE_URL }}/{{ RUNNER_VERSION }}/{{ ansible_system | lower }}/{{ arch }}/circleci-launch-agent' -o '{{ circleci_temp_dir.path  }}/circleci-launch-agent'"
 
-- name: Get binary status
+- name: Get circleci-launch-agent SHA256
   stat:
     path: "{{ circleci_temp_dir.path  }}/circleci-launch-agent"
     checksum_algorithm: sha256
@@ -63,5 +48,80 @@
   file:
     path: "{{ RUNNER_DIR }}/workdir"
     state: directory
-    owner: "{{ circleci_user }}"
-    group: "{{ circleci_user }}"
+    owner: "{{ CIRCLECI_USER }}"
+    group: "{{ CIRCLECI_USER }}"
+
+- name: Move Launch Agent to {{ RUNNER_DIR }}
+  file:
+    src: "{{ circleci_temp_dir.path  }}/circleci-launch-agent"
+    dest: "{{ RUNNER_DIR }}/circleci-launch-agent"
+    mode: 0700
+    owner: root
+    group: root
+
+- name: Delete temporary CircleCI Directory
+  file:
+    path: "{{ circleci_temp_dir.path }}"
+    state: absent
+  when: circleci_temp_dir.path is defined
+
+- name: Template launch-agent-config.yaml
+  template:
+    src: "linux-launch-agent-config.yaml.j2"
+    dest: "{{ RUNNER_DIR }}/launch-agent-config.yaml"
+    owner: root
+    group: root
+    mode: 0600
+
+- name: Configure SELinux policy (RHEL 8)
+  block:
+    - name: Install policycoreutils-devel and rpm-build
+      yum:
+          name: "{{ packages }}"
+      vars:
+        packages:
+          - policycoreutils-devel
+          - rpm-build
+    
+    - name: Create policy directory
+      file:
+        path: "{{ RUNNER_DIR }}/policy"
+        state: directory
+        owner: root
+        group: root
+
+    - name: Generate CircleCI Policy
+      command: sepolicy generate --path {{ RUNNER_DIR }}/policy --init {{ RUNNER_DIR }}/circleci-launch-agent
+    
+    - name: Download circleci_launch_agent.te
+      get_url:
+        url: "https://raw.githubusercontent.com/CircleCI-Public/runner-installation-files/main/rhel8-install/circleci_launch_agent.te"
+        dest: "{{ RUNNER_DIR }}/policy/circleci_launch_agent.te"
+    
+    - name: Run circleci_launch_agent.sh
+      command: "{{ RUNNER_DIR }}/policy/circleci_launch_agent.sh"
+  when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "8"
+
+- name: Template circleci.service
+  template:
+    src: "circleci.service.j2"
+    dest: "{{ RUNNER_DIR }}/circleci.service"
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Create a symlink between CircleCI Policies 
+  file:
+    src: "{{ RUNNER_DIR }}/circleci.service"
+    dest: "/etc/systemd/system/circleci.service"
+    owner: root
+    group: root
+    state: link
+    mode: 0755
+
+- name: Install CircleCI Service
+  systemd:
+    name: "circleci"
+    enabled: yes
+    state: started
+    daemon_reload: yes

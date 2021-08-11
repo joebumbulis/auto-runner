@@ -6,21 +6,6 @@
     path: "{{ TEMPDIR }}"
   register: circleci_temp_dir
 
-- name: Format Architecture Name - x86_64 to amd64
-  set_fact:
-    arch: "amd64"
-  when:  ansible_architecture == 'x86_64'
-
-- name: Format Architecture Name - aarch64 to arm64
-  set_fact:
-    arch: "arm64"
-  when:  ansible_architecture == 'aarch64'
-
-- name: Format Architecture Name - Other Architectures
-  set_fact:
-    arch: "{{ ansible_architecture }}"
-  when: ansible_architecture != 'x86_64' and ansible_architecture != 'aarch64'
-
 - name: Download Checksum File
   get_url:
     url: "{{ BASE_URL }}/{{ RUNNER_VERSION }}/checksums.txt"
@@ -36,7 +21,7 @@
 - name: curl runner binary
   command: "curl --compressed -L '{{ BASE_URL }}/{{ RUNNER_VERSION }}/{{ ansible_system | lower }}/{{ arch }}/circleci-launch-agent' -o '{{ circleci_temp_dir.path  }}/circleci-launch-agent'"
 
-- name: Get binary status
+- name: Get circleci-launch-agent SHA256
   stat:
     path: "{{ circleci_temp_dir.path  }}/circleci-launch-agent"
     checksum_algorithm: sha256
@@ -51,3 +36,60 @@
 - fail:
     msg: "Runner checksum failed"
   when: runner_stat.stat.checksum != checksum
+
+- name: Create CircleCI User - {{ CIRCLECI_USER }}
+  user:
+    name: "{{ CIRCLECI_USER }}"
+    home: /opt/{{ circleci_user }}/workdir
+    comment: "GECOS circleci"
+    uid: 1500
+
+- name: Create working directory
+  file:
+    path: "{{ RUNNER_DIR }}/workdir"
+    state: directory
+    owner: "{{ CIRCLECI_USER }}"
+    group: "{{ CIRCLECI_USER }}"
+
+- name: Move Launch Agent to {{ RUNNER_DIR }}
+  file:
+    src: "{{ circleci_temp_dir.path  }}/circleci-launch-agent"
+    dest: "{{ RUNNER_DIR }}/circleci-launch-agent"
+    mode: 0700
+    owner: root
+    group: root
+
+- name: Delete temporary CircleCI Directory
+  file:
+    path: "{{ circleci_temp_dir.path }}"
+    state: absent
+  when: circleci_temp_dir.path is defined
+
+- name: Create Mac Program Directory
+  file:
+    path: "/Library/Preferences/com.circleci.runner"
+    state: directory
+    owner: root
+    group: root
+
+- name: Template launch-agent-config.yaml
+  template:
+    src: "darwin-launch-agent-config.yaml.j2"
+    dest: "/Library/Preferences/com.circleci.runner/launch-agent-config.yaml"
+    owner: root
+    group: root
+    mode: 0600
+
+- name: Copy com.circleci.runner.plist
+  template:
+    src: "com.circleci.runner.plist"
+    dest: "/Library/LaunchDaemons/com.circleci.runner.plist"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Install CircleCI Service
+  community.general.launchd:
+    name: com.circleci.runner
+    state: started
+    enabled: yes
