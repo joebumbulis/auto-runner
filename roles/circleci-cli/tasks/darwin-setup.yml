@@ -3,20 +3,20 @@
   tempfile:
     state: directory
     suffix: "_circleci"
-    path: "{{ TEMPDIR }}"
-  register: circleci_temp_dir
+    path: "/tmp/"
+  register: cli_temp_dir
 
 - name: Download CircleCI CLI and Verify Checksum
   get_url:
-    url: "{{ GITHUB_BASE_URL }}/releases/download/v{{ VERSION }}/circleci-cli_{{ VERSION }}_{{ ansible_system | lower }}_{{ arch }}.tar.gz"
-    dest: "{{ circleci_temp_dir.path }}"
-    checksum: "sha256:{{ GITHUB_BASE_URL }}/releases/download/v{{ VERSION }}/circleci-cli_{{ VERSION }}_checksums.txt"
+    url: "{{ CLI_GITHUB_BASE_URL }}/releases/download/v{{ CLI_VERSION }}/circleci-cli_{{ CLI_VERSION }}_{{ ansible_system | lower }}_{{ arch }}.tar.gz"
+    dest: "{{ cli_temp_dir.path }}"
+    checksum: "sha256:{{ CLI_GITHUB_BASE_URL }}/releases/download/v{{ CLI_VERSION }}/circleci-cli_{{ CLI_VERSION }}_checksums.txt"
   register: download_info
 
-- name: Extract CircleCI CLI to {{ DESTDIR }}
+- name: Extract CircleCI CLI to {{ CLI_INSTALL_DIR }}
   unarchive:
     src: "{{ download_info.dest }}"
-    dest: "{{ DESTDIR }}"
+    dest: "{{ CLI_INSTALL_DIR }}"
     remote_src: true
     extra_opts: [--strip-components=1]
     exclude:
@@ -25,11 +25,32 @@
 
 - name: Delete temporary CircleCI Directory
   file:
-    path: "{{ circleci_temp_dir.path }}"
+    path: "{{ cli_temp_dir.path }}"
     state: absent
-  when: circleci_temp_dir.path is defined
+  when: cli_temp_dir.path is defined
 
 - name: Check CircleCI CLI Install
   shell: circleci version
-  register: cli
-  failed_when: cli.rc != 0
+  register: cli_command
+  become_user: "{{ ansible_user }}"
+  failed_when: cli_command.rc != 0
+
+- name: Grab {{ ansible_user }} home directory
+  user:
+    name: "{{ ansible_user }}"
+    state: present
+  register: user_registered
+
+- name: Template cli.yml
+  template:
+    src: "cli.yml.j2"
+    dest: "{{ user_registered.home }}/.circleci/cli.yml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: 0600
+
+- name: Verify CircleCI CLI Config
+  shell: circleci diagnostic
+  register: diagnostic_command
+  become_user: "{{ ansible_user }}"
+  failed_when: diagnostic_command.rc != 0

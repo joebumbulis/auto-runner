@@ -4,4 +4,7 @@
   become: True
   tasks:
   - import_role:
+      name: circleci-cli
+  
+  - import_role:
       name: runner

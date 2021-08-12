@@ -11,13 +11,14 @@
     action: latest_release
   register: github_response
 
-- set_fact:
+- name: Set Latest Version of CLI
+  set_fact:
     latest_version: "{{ github_response.tag[1:] }}"
 
 - name: Check if Version is Set
   set_fact:
-    VERSION: "{{ latest_version }}"
-  when: VERSION == None  
+    CLI_VERSION: "{{ latest_version }}"
+  when: CLI_VERSION == None  
 
 - name: Format Architecture Name - x86_64 to amd64
   set_fact:
@@ -34,11 +35,14 @@
     arch: "{{ ansible_architecture }}"
   when: ansible_architecture != 'x86_64' and ansible_architecture != 'aarch64'
 
-- include_tasks: linux-setup.yml
+- name: Install CircleCI CLI for Linux
+  include_tasks: linux-setup.yml
   when: ansible_system == "Linux"
 
-- include_tasks: windows-setup.yml
+- name: Install CircleCI CLI for Windows
+  include_tasks: windows-setup.yml
   when: ansible_system == "Windows"
 
-- include_tasks: darwin-setup.yml
+- name: Install CircleCI CLI for MacOS
+  include_tasks: darwin-setup.yml
   when: ansible_system == "Darwin" 

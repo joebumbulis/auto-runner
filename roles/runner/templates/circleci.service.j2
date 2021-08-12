@@ -2,7 +2,7 @@
 Description=CircleCI Runner
 After=network.target
 [Service]
-ExecStart={{ RUNNER_DIR }}/circleci-launch-agent --config {{ RUNNER_DIR }}/launch-agent-config.yaml
+ExecStart={{ LAUNCH_AGENT_DIR }}/circleci-launch-agent --config {{ LAUNCH_AGENT_DIR }}/launch-agent-config.yaml
 Restart=always
 User=root
 NotifyAccess=exec

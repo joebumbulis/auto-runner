@@ -1,19 +1,19 @@
 ---
-- name: Check that a page returns a status 200 and fail if the word AWESOME is not in the page contents
+- name: Grab Latest Release for Launch Agent
   uri:
-    url: "{{ BASE_URL }}/release.txt"
+    url: "{{ LAUNCH_AGENT_BASE_URL }}/release.txt"
     return_content: yes
   register: release_info
 
-- name: Setting Runner Version for Non-Server Install
+- name: Setting Launch Agent Version - [ Non-Server Install ]
   set_fact:
-    RUNNER_VERSION: "{{ release_info.content[:-1] }}"
-  when: RUNNER_VERSION == None and SERVER_INSTALL == False
+    LAUNCH_AGENT_VERSION: "{{ release_info.content[:-1] }}"
+  when: LAUNCH_AGENT_VERSION == None and SERVER_INSTALL | bool == false
 
-- name: Check if Server Install is Enable and Version is Set
+- name: Check if LAUNCH_AGENT_VERSION is not set and SERVER_INSTALL is true
   fail:
-    msg: "You are trying to install Runner on Server with out having RUNNER_VERSION set. Please refer to https://circleci.com/docs/2.0/runner-installation/#runner-for-server-compatibility"
-  when: RUNNER_VERSION == None and SERVER_INSTALL == True
+    msg: "You are trying to install Runner on Server with out having LAUNCH_AGENT_VERSION set. Please refer to https://circleci.com/docs/2.0/runner-installation/#runner-for-server-compatibility"
+  when: LAUNCH_AGENT_VERSION == None and SERVER_INSTALL | bool == true
 
 - name: Format Architecture Name - x86_64 to amd64
   set_fact:
@@ -30,12 +30,17 @@
     arch: "{{ ansible_architecture }}"
   when: ansible_architecture != 'x86_64' and ansible_architecture != 'aarch64'
 
+- name: Configure Runner Prerequisites
+  include_tasks: circleci-cli-setup.yml
 
-- include_tasks: linux-setup.yml
+- name: Configure Runner for Linux
+  include_tasks: linux-setup.yml
   when: ansible_system == "Linux"
 
-- include_tasks: windows-setup.yml
+- name: Configure Runner for Windows
+  include_tasks: windows-setup.yml
   when: ansible_system == "Windows"
 
-- include_tasks: darwin-setup.yml
+- name: Configure Runner for MacOS
+  include_tasks: darwin-setup.yml
   when: ansible_system == "Darwin" 

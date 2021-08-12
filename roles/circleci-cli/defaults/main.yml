@@ -1,5 +1,4 @@
 ---
-GITHUB_BASE_URL: "https://github.com/CircleCI-Public/circleci-cli"
-LATEST_URL: "{{ GITHUB_BASE_URL }}/releases/latest/"
-DESTDIR: "/usr/local/bin/"
-TEMPDIR: "/tmp"
+CLI_GITHUB_BASE_URL: "https://github.com/CircleCI-Public/circleci-cli"
+CLI_INSTALL_DIR: "/usr/local/bin/"
+CIRCLECI_HOST: "https://circleci.com"

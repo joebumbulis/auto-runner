@@ -1,0 +1,32 @@
+---
+- name: Verify CircleCI CLI Configuration
+  shell: circleci diagnostic
+  register: diagnostic_command
+  become_user: "{{ ansible_user }}"
+  failed_when: diagnostic_command.rc != 0
+
+- name: Create Namespace - {{ NAMESPACE }}
+  shell: "circleci namespace create {{ NAMESPACE }} {{ VCS_TYPE }} {{ ORG_NAME }} --no-prompt"
+  register: namespace_command
+  become_user: "{{ ansible_user }}"
+  failed_when: namespace_command.rc != 0
+  when: NAMESPACE_CREATION | bool == true
+
+- name: Create Resource Class - {{ RESOURCE_CLASS }}
+  shell: "circleci runner resource-class create {{ NAMESPACE }}/{{ RESOURCE_CLASS }} '{{ RESOURCE_CLASS_DESCRIPTION }}'"
+  register: resource_class_command
+  become_user: "{{ ansible_user }}"
+  failed_when: resource_class_command.rc != 0
+  when: RESOURCE_CLASS_CREATION | bool == true
+
+- name: Generate Auth Token for Runner
+  shell: "circleci runner token create {{ NAMESPACE }}/{{ RESOURCE_CLASS }} {{ RUNNER_NICKNAME }}"
+  register: auth_token_command
+  become_user: "{{ ansible_user }}"
+  failed_when: auth_token_command.rc != 0
+  when: RUNNER_TOKEN_CREATION | bool == true
+
+- name: Get Auth Token
+  set_fact:
+    AUTH_TOKEN: "{{ auth_token_command.stdout | regex_search('(?<=auth_token: ).*') }}"
+  when: AUTH_TOKEN == None

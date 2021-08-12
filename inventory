@@ -1,0 +1,2 @@
+[ubuntu-amd64-aws]
+18.118.135.150  ansible_user=ubuntu

@@ -1,5 +1,5 @@
 ---
-- name: Install CircleCI Cli via Chocolatey
-  win_chocolatey:
-    name: circleci-cli 
-    state: present
+# - name: Install CircleCI Cli via Chocolatey
+#   win_chocolatey:
+#     name: circleci-cli 
+#     state: present
