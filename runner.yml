@@ -1,7 +1,7 @@
 ---
 - name: Install Runner
   hosts: "{{ target_hosts }}"
-  become: True
+  become: true
   tasks:
   - import_role:
       name: circleci-cli

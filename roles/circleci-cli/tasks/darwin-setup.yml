@@ -1,4 +1,10 @@
 ---
+- name: Install gnu-tar
+  community.general.homebrew:
+    name: gnu-tar
+    state: present
+  become_user: "{{ ansible_user }}"
+
 - name: Create temporary CircleCI Directory
   tempfile:
     state: directory
@@ -22,6 +28,8 @@
     exclude:
       - api
       - md_docs
+  environment:
+    PATH: /usr/local/opt/gnu-tar/libexec/gnubin:{{ ansible_env.PATH }}
 
 - name: Delete temporary CircleCI Directory
   file:
@@ -30,7 +38,7 @@
   when: cli_temp_dir.path is defined
 
 - name: Check CircleCI CLI Install
-  shell: circleci version
+  shell: /usr/local/bin/circleci version
   register: cli_command
   become_user: "{{ ansible_user }}"
   failed_when: cli_command.rc != 0
@@ -46,11 +54,11 @@
     src: "cli.yml.j2"
     dest: "{{ user_registered.home }}/.circleci/cli.yml"
     owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
+    group: "staff"
     mode: 0600
 
 - name: Verify CircleCI CLI Config
-  shell: circleci diagnostic
+  shell: /usr/local/bin/circleci diagnostic
   register: diagnostic_command
   become_user: "{{ ansible_user }}"
   failed_when: diagnostic_command.rc != 0

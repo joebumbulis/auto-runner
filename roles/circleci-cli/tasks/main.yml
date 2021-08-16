@@ -1,8 +1,14 @@
 ---
+- name: Update Pip to latest Version
+  pip:
+    name: pip
+    state: latest
+
 - name: Install GitHub Python Package
   pip:
     name: github3.py >= 1.0.0a3
     state: present
+    executable: /usr/local/bin/pip3
 
 - name: Grab latest CircleCI CLI Version
   github_release:

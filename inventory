@@ -1,2 +1,5 @@
 [ubuntu-amd64-aws]
 18.118.135.150  ansible_user=ubuntu
+
+[macos-amd64-aws]
+18.222.51.166   ansible_user=ec2-user ansible_python_interpreter=/usr/bin/python3
