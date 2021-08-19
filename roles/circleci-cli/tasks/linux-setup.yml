@@ -32,12 +32,12 @@
 - name: Check CircleCI CLI Install
   shell: circleci version
   register: cli_command
-  become_user: "{{ ansible_user }}"
+  become_user: "{{ CLI_USER }}"
   failed_when: cli_command.rc != 0
 
-- name: Grab {{ ansible_user }} home directory
+- name: Grab {{ CLI_USER }} home directory
   user:
-    name: "{{ ansible_user }}"
+    name: "{{ CLI_USER }}"
     state: present
   register: user_registered
 
@@ -45,12 +45,12 @@
   template:
     src: "cli.yml.j2"
     dest: "{{ user_registered.home }}/.circleci/cli.yml"
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
+    owner: "{{ CLI_USER }}"
+    group: "{{ CLI_USER }}"
     mode: 0600
 
 - name: Verify CircleCI CLI Config
   shell: circleci diagnostic
   register: diagnostic_command
-  become_user: "{{ ansible_user }}"
+  become_user: "{{ CLI_USER }}"
   failed_when: diagnostic_command.rc != 0

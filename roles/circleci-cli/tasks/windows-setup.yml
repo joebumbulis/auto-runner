@@ -1,5 +1,18 @@
 ---
-# - name: Install CircleCI Cli via Chocolatey
-#   win_chocolatey:
-#     name: circleci-cli 
-#     state: present
+- name: Install chocolatey
+  win_chocolatey:
+      name:
+        - chocolatey
+        - chocolatey-core.extension
+      state: present
+
+- name: Uninstall CircleCI Cli
+  win_chocolatey:
+    name: circleci-cli
+    state: present
+
+- name: Install CircleCI Cli [{{ CLI_VERSION }}]
+  win_chocolatey:
+    name: circleci-cli
+    version: "{{ CLI_VERSION }}" 
+    state: present

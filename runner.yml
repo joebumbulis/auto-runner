@@ -1,10 +1,25 @@
 ---
-- name: Install Runner
+- name: Install and Configure Runner
   hosts: "{{ target_hosts }}"
   become: true
+
+  vars_files:
+    - vars/config.yaml
+
+  pre_tasks:
+    - name: Initialize Config Variables
+      include_vars: vars/config.yaml
+
+    - name: Install CircleCI CLI
+      import_role:
+        name: circleci-cli
+      when: ansible_architecture != 'aarch64'
+
+    - name: Configure Namespace, Resource Class and Auth Token for Runner
+      include_tasks: tasks/circleci-cli-setup.yml
+      when: (NAMESPACE_CREATION | bool == true or RESOURCE_CLASS_CREATION | bool == true or RUNNER_TOKEN_CREATION | bool == true) and ansible_architecture != 'aarch64'
+
   tasks:
-  - import_role:
-      name: circleci-cli
-  
-  - import_role:
-      name: runner
+    - name: Install and Configure Launch Agent
+      import_role:
+        name: runner

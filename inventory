@@ -3,3 +3,6 @@
 
 [macos-amd64-aws]
 18.222.51.166   ansible_user=ec2-user ansible_python_interpreter=/usr/bin/python3
+
+[windows-amd64-aws]
+3.137.186.33    ansible_user=Administrator ansible_shell_type=cmd ansible_become_method=runas

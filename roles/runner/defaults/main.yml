@@ -9,9 +9,4 @@ CIRCLECI_USER: "circleci"
 # Launch Agent Config Settings
 CLEANUP_WORKING_DIR: true
 TIMEOUT_STOP_SEC: 18300
-
-# CircleCI CLI Settings
-NAMESPACE_CREATION: false
-RESOURCE_CLASS_CREATION: true
-RUNNER_TOKEN_CREATION: true
-VCS_TYPE: "github"
+RUNNER_NICKNAME:  "{{ ansible_hostname }}"

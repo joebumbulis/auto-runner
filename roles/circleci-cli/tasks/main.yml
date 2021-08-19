@@ -45,9 +45,9 @@
   include_tasks: linux-setup.yml
   when: ansible_system == "Linux"
 
-- name: Install CircleCI CLI for Windows
-  include_tasks: windows-setup.yml
-  when: ansible_system == "Windows"
+# - name: Install CircleCI CLI for Windows
+#   include_tasks: windows-setup.yml
+#   when: ansible_system == "Win32NT"
 
 - name: Install CircleCI CLI for MacOS
   include_tasks: darwin-setup.yml
