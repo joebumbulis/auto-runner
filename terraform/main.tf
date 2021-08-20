@@ -68,7 +68,7 @@ data "aws_security_group" "allow_ssh_anywhere" {
 }
 
 data "template_file" "user_data" {
-  template = file("user-data.yml")
+  template = file("${path.module}/user-data.yml")
 }
 
 resource "aws_instance" "web" {

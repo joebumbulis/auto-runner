@@ -15,14 +15,13 @@ jobs:
     steps:
       - checkout
       - terraform/init:
-          path: .
+          path: terraform/
       - terraform/apply:
-          path: .
+          path: terraform/
           var_file: demo.tfvars
       - run:
           name: Terraform Output
-          command: terraform output public_ip
-    working_directory: ~/auto-runner/terraform/
+          command: cd terraform/ && terraform output public_ip
 
 workflows:
   demo:
