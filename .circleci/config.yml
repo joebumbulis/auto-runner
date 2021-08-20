@@ -71,7 +71,7 @@ jobs:
           fingerprints:
             - "dd:8f:af:18:32:a1:c9:b7:86:ca:73:a1:1e:77:db:87"
       - install-ansible:
-          version: "ansible>=2.9,<2.10"
+          version: "'ansible>=2.9,<2.10'"
       - install-runner
       
 
@@ -85,4 +85,6 @@ workflows:
   demo:
     jobs:
       - deploy-runner-via-terraform
-      - install-runner-via-ansible
+      - install-runner-via-ansible: 
+          requires: 
+            - deploy-runner-via-terraform
