@@ -3,6 +3,45 @@ version: 2.1
 orbs:
   terraform: circleci/terraform@2.1.0
 
+commands:
+  install-ansible:
+    description: "Install Ansible via Pip"
+    parameters:
+      version:
+        type: string
+        default: "ansible>=2.9,<2.10"        
+    steps:
+      - run:
+          name: Installing Ansible via Pip
+          command: |
+            export PIP=$(which pip pip3 | head -1)
+            if [[ -n $PIP ]]; then
+              if which sudo > /dev/null; then
+                if [ -n "<<parameters.version>>" ]; then
+                  sudo $PIP install ansible==<<parameters.version>> --upgrade
+                else
+                  sudo $PIP install ansible --upgrade
+                fi
+              else
+                if [ -n "<<parameters.version>>" ]; then
+                  $PIP install ansible==<<parameters.version>> --upgrade --user
+                else
+                  $PIP install ansible --upgrade --user
+                fi
+              fi
+            else
+              echo "Unable to install Ansible. Please install pip."
+              exit 1
+            fi
+  
+  install-runner:
+    description: "Install Runner via Ansible"
+    steps:
+      - run:
+          name: Run Ansible Playbook
+          command: |
+          ansible-playbook -i aws_ec2.yml -vv runner.yml -u ansible -e "RESOURCE_CLASS_CREATION=false NAMESPACE=crowley-namespace ORG_NAME=james-crowley RESOURCE_CLASS=runner-demo API_TOKEN=$API_TOKEN target_hosts=$target_hosts"
+
 jobs:
   runner:
     machine: true
@@ -20,10 +59,31 @@ jobs:
           path: terraform/
           var_file: demo.tfvars
       - run:
-          name: Terraform Output
-          command: cd terraform/ && terraform output public_ip
+          name: Export Public IP of VM
+          command: |
+          echo "export target_hosts=$(terraform output public_ip)" >> $BASH_ENV
+          source $BASH_ENV
+
+  install-runner-via-ansible:
+    executor: ansible
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - "dd:8f:af:18:32:a1:c9:b7:86:ca:73:a1:1e:77:db:87"
+      - install-ansible:
+          version: "ansible>=2.9,<2.10"
+      - install-runner
+      
+
+executors:
+  ansible:
+    docker:
+      - image: cimg/python:3.9.6
+
 
 workflows:
   demo:
     jobs:
       - deploy-runner-via-terraform
+      - install-runner-via-ansible
