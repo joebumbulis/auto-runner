@@ -34,6 +34,30 @@ commands:
               exit 1
             fi
   
+  install-additional-packages:
+    description: "Installing additional Packages for Ansible"
+    steps:
+      - run:
+          name: Install boto3 & botocore
+          command: |
+            export PIP=$(which pip pip3 | head -1)
+            if [[ -n $PIP ]]; then
+              if which sudo > /dev/null; then
+                sudo $PIP install boto3 botocore --upgrade
+              else
+                $PIP install boto3 botocore --upgrade --user
+              fi
+            else
+              echo "Unable to install boto3 & botocore. Please install pip."
+              exit 1
+            fi
+      - run:
+          name: Install amazon.aws
+          command: ansible-galaxy collection install amazon.aws
+      - run:
+          name: Install community.general
+          command: ansible-galaxy collection install community.general
+
   install-runner:
     description: "Install Runner via Ansible"
     steps:
@@ -72,6 +96,7 @@ jobs:
             - "dd:8f:af:18:32:a1:c9:b7:86:ca:73:a1:1e:77:db:87"
       - install-ansible:
           version: "2.9.24"
+      - install-additional-packages
       - install-runner
       
 
