@@ -63,10 +63,11 @@ commands:
     steps:
       - run:
           name: Run Ansible Playbook
-          command: ansible-playbook -i aws_ec2.yml -vv runner.yml -u ansible -e "RESOURCE_CLASS_CREATION=false NAMESPACE=crowley-namespace ORG_NAME=james-crowley RESOURCE_CLASS=runner-demo API_TOKEN=$API_TOKEN target_hosts=$target_hosts"
+          command: ansible-playbook -i aws_ec2.yml -vv runner.yml -u ansible -e "RESOURCE_CLASS_CREATION=false NAMESPACE=crowley-namespace ORG_NAME=james-crowley RESOURCE_CLASS=runner-demo API_TOKEN=$API_TOKEN target_hosts=$(cat /tmp/terraform/output)"
+
 
 jobs:
-  runner:
+  running-on-runner:
     machine: true
     resource_class: crowley-namespace/runner-demo
     steps:
@@ -82,15 +83,22 @@ jobs:
           path: terraform/
           var_file: demo.tfvars
       - run:
-          name: Export Public IP of VM
-          command: |
-            echo "export target_hosts=$(terraform output public_ip)" >> $BASH_ENV
-            source $BASH_ENV
+          name: Create a Temp Terraform Directory
+          command: mkdir -p /tmp/terraform/
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+            - terraform/*
+      - run:
+          name: Write out Public IP value to /tmp/terraform/output
+          command: echo "$(terraform output public_ip)" > /tmp/terraform/output
 
   install-runner-via-ansible:
     executor: ansible
     steps:
       - checkout
+      - attach_workspace:
+          at: /tmp
       - add_ssh_keys:
           fingerprints:
             - "dd:8f:af:18:32:a1:c9:b7:86:ca:73:a1:1e:77:db:87"
@@ -113,3 +121,6 @@ workflows:
       - install-runner-via-ansible: 
           requires: 
             - deploy-runner-via-terraform
+      - running-on-runner:
+          requires: 
+            - install-runner-via-ansible
