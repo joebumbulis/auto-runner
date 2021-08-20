@@ -39,8 +39,7 @@ commands:
     steps:
       - run:
           name: Run Ansible Playbook
-          command: |
-          ansible-playbook -i aws_ec2.yml -vv runner.yml -u ansible -e "RESOURCE_CLASS_CREATION=false NAMESPACE=crowley-namespace ORG_NAME=james-crowley RESOURCE_CLASS=runner-demo API_TOKEN=$API_TOKEN target_hosts=$target_hosts"
+          command: ansible-playbook -i aws_ec2.yml -vv runner.yml -u ansible -e "RESOURCE_CLASS_CREATION=false NAMESPACE=crowley-namespace ORG_NAME=james-crowley RESOURCE_CLASS=runner-demo API_TOKEN=$API_TOKEN target_hosts=$target_hosts"
 
 jobs:
   runner:
@@ -61,8 +60,8 @@ jobs:
       - run:
           name: Export Public IP of VM
           command: |
-          echo "export target_hosts=$(terraform output public_ip)" >> $BASH_ENV
-          source $BASH_ENV
+            echo "export target_hosts=$(terraform output public_ip)" >> $BASH_ENV
+            source $BASH_ENV
 
   install-runner-via-ansible:
     executor: ansible
