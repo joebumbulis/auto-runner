@@ -85,13 +85,13 @@ jobs:
       - run:
           name: Create a Temp Terraform Directory
           command: mkdir -p /tmp/terraform/
+      - run:
+          name: Write out Public IP value to /tmp/terraform/output
+          command: echo "$(terraform output public_ip)" > /tmp/terraform/output
       - persist_to_workspace:
           root: /tmp
           paths:
             - terraform/*
-      - run:
-          name: Write out Public IP value to /tmp/terraform/output
-          command: echo "$(terraform output public_ip)" > /tmp/terraform/output
 
   install-runner-via-ansible:
     executor: ansible
