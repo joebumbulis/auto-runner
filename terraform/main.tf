@@ -6,10 +6,7 @@ terraform {
   }
 }
 
-provider "aws" {
-  region                  = var.region
-  profile                 = var.profile
-}
+provider "aws" {}
 
 data "aws_ami" "ubuntu" {
   most_recent = true
@@ -45,6 +42,23 @@ data "aws_ami" "redhat" {
 }
 
 
+data "aws_ami" "redhat_arm64" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["RHEL-8*-*-arm64-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  owners = ["309956199498"] # RedHat
+}
+
+
 data "aws_vpc" "default" {
     default = true
 } 
@@ -58,7 +72,7 @@ data "template_file" "user_data" {
 }
 
 resource "aws_instance" "web" {
-  ami                         = data.aws_ami.redhat.id
+  ami                         = data.aws_ami.ubuntu.id
   instance_type               = var.instance_type
   key_name                    = var.key_name
   vpc_security_group_ids      = [data.aws_security_group.allow_ssh_anywhere.id]
@@ -66,8 +80,8 @@ resource "aws_instance" "web" {
   user_data                   = data.template_file.user_data.rendered
 
   tags = {
-    Name = "Testing-Runner",
-    Owner = "",
+    Name = var.vm_name,
+    Owner = var.owner_name,
     Environment = "Test",
     Purpose = "Runner",
     Expiration = "",

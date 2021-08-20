@@ -1,14 +1,9 @@
 ---
 plugin: aws_ec2
-aws_access_key: XXXXXXXXX
-aws_secret_key: XXXXXXXXX
-
 regions:
   - us-east-2
-
 hostnames:
   - ip-address
-  
 filters:
   instance-state-name : running
   key-name:

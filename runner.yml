@@ -4,11 +4,11 @@
   become: true
 
   vars_files:
-    - vars/config.yaml
+    - vars/config.yml
 
   pre_tasks:
     - name: Initialize Config Variables
-      include_vars: vars/config.yaml
+      include_vars: vars/config.yml
 
     - name: Install CircleCI CLI
       import_role:
