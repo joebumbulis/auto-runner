@@ -1,0 +1,29 @@
+version: 2.1
+
+orbs:
+  terraform: circleci/terraform@2.1.0
+
+jobs:
+  runner:
+    machine: true
+    resource_class: crowley-namespace/runner-demo
+    steps:
+      - run: echo "Hi I'm on Runners!"
+  
+  deploy-runner-via-terraform:
+    executor: terraform/default
+    steps:
+      - checkout
+      - terraform/init:
+          path: terraform/
+      - terraform/apply:
+          path: terraform/
+          var_file: terraform/demo.tfvars
+      - run:
+          name: Terraform Output
+          command: cd terraform/ && terraform output public_ip
+
+workflows:
+  demo:
+    jobs:
+      - deploy-runner-via-terraform
