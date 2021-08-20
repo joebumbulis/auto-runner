@@ -117,10 +117,13 @@ executors:
 workflows:
   demo:
     jobs:
-      - deploy-runner-via-terraform
-      - install-runner-via-ansible: 
+      - deploy-runner-via-terraform:
+          name: "Deploy Server Instance"
+      - install-runner-via-ansible:
+          name: "Install and Configure Runner" 
           requires: 
-            - deploy-runner-via-terraform
+            - "Deploy Server Instance"
       - running-on-runner:
+          name: "Run job on Runner"
           requires: 
-            - install-runner-via-ansible
+            - "Install and Configure Runner" 
