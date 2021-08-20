@@ -1,4 +1,3 @@
-aws_ec2.yaml
 terraform/.*
 terraform/terraform.tfstate
 terraform/terraform.tfstate.backup
