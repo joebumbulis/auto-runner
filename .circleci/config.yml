@@ -9,7 +9,7 @@ commands:
     parameters:
       version:
         type: string
-        default: ">=2.9,<2.10"        
+        default: "2.9.24"        
     steps:
       - run:
           name: Installing Ansible via Pip
@@ -18,13 +18,13 @@ commands:
             if [[ -n $PIP ]]; then
               if which sudo > /dev/null; then
                 if [ -n "<<parameters.version>>" ]; then
-                  sudo $PIP install ansible<<parameters.version>> --upgrade
+                  sudo $PIP install ansible==<<parameters.version>> --upgrade
                 else
                   sudo $PIP install ansible --upgrade
                 fi
               else
                 if [ -n "<<parameters.version>>" ]; then
-                  $PIP install ansible<<parameters.version>> --upgrade --user
+                  $PIP install ansible==<<parameters.version>> --upgrade --user
                 else
                   $PIP install ansible --upgrade --user
                 fi
@@ -71,7 +71,7 @@ jobs:
           fingerprints:
             - "dd:8f:af:18:32:a1:c9:b7:86:ca:73:a1:1e:77:db:87"
       - install-ansible:
-          version: ">=2.9,<2.10"
+          version: "2.9.24"
       - install-runner
       
 
