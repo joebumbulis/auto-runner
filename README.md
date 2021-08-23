@@ -87,4 +87,3 @@ the [config.yml](vars/config.yml).
 
 ## To Do
 - Windows support does not exist but can be added
-- Need to test on Arm64 resources. Shouldn't be an issue with arch aware code. Need `circleci cli` for arm64
