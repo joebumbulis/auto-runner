@@ -87,3 +87,17 @@ the [config.yml](vars/config.yml).
 
 ## To Do
 - Windows support does not exist but can be added
+
+
+## Runner Set up & Tear down:
+### Tear down:
+- in terminal, `cd terraform` and enter `➜  auto-runner git:(main) ✗ terraform destroy -var-file=demo.tfvars` 
+- this will tear down the current running instance inside of [aws](https://us-east-2.console.aws.amazon.com/ec2/v2/home?region=us-east-2#Instances:keyName=joe_mac) 
+- 
+### Set up:
+- `cd terraform` directoy
+- cmd `terraform apply -var-file=demo.tfvars`
+- grab new IP address from terminal and update file `terraform/vars/config.yml` at `target_hosts`
+- Go back to home directory in terminal `cd ..`
+- Run ansible: `ansible-playbook -i aws_ec2.yml runner.yml -u ansible`
+- This will kick off the new instance and runner will be running 

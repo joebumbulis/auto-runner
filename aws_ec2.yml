@@ -7,4 +7,4 @@ hostnames:
 filters:
   instance-state-name : running
   key-name:
-    - crowley-*
+    - joe_mac

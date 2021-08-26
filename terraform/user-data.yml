@@ -6,3 +6,5 @@ system_info:
 packages:
   - python3-pip
   - python3
+  - nodejs
+  - npm

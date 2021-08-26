@@ -2,7 +2,7 @@ CLI_INSTALL_DIR: "/usr/local/bin"
 CLI_USER: "{{ ansible_env.SUDO_USER | default(ansible_env.USER, true) | default(ansible_user_id, true) }}"
 
 NAMESPACE_CREATION: false
-RESOURCE_CLASS_CREATION: true
+RESOURCE_CLASS_CREATION: false
 RUNNER_TOKEN_CREATION: true
 
 # Only Set Auth Token if RUNNER_TOKEN_CREATION is False
@@ -10,11 +10,11 @@ RUNNER_TOKEN_CREATION: true
 
 VCS_TYPE: "github"
 
-NAMESPACE: 
-ORG_NAME: 
-RESOURCE_CLASS: 
-RESOURCE_CLASS_DESCRIPTION: 
+NAMESPACE: bumbulis
+ORG_NAME: joebumbulis
+RESOURCE_CLASS: test-autorunner
+RESOURCE_CLASS_DESCRIPTION: "Set up test runner with autorunner"
 
-API_TOKEN: 
+API_TOKEN: 00fc26355111e274ba654c26dfedede6a06b0808
 
-target_hosts: 
+target_hosts: 3.143.232.66
